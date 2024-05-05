@@ -1,0 +1,62 @@
+version: "3.9"
+services:
+  db:
+    build: config/db_postgres
+    image: emurze/postgres:16
+    container_name: db
+    networks:
+      - backend
+    ports:
+      - '5432:5432'
+    env_file:
+      - env/.infra.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin4:
+    image: dpage/pgadmin4:8.1
+    container_name: pgadmin4
+    networks:
+      - backend
+    ports:
+      - '8888:80'
+    env_file:
+      - env/.infra.env
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  cache:
+    image: 'redis:7'
+    container_name: 'cache'
+    command: redis-server /etc/redis.conf
+    networks:
+      - backend
+    ports:
+      - '6379:6379'
+    volumes:
+      - cache_data:/data
+      - ./cache:/etc/redis.conf
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.13.1-management-alpine
+    env_file:
+      - env/.infra.env
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+
+volumes:
+  cache_data:
+  pgadmin_data:
+  postgres_data:
+
+networks:
+  backend:
