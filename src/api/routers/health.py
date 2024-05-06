@@ -1,20 +1,8 @@
-import uuid
-from pprint import pprint
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Depends
-from lato import Application
-
-from api.deps import get_application
-from modules.accounts.application.query import GetAccountQuery
-
-health_router = APIRouter()
+router = APIRouter()
 
 
-@health_router.get("/health")
-async def health(app: Application = Depends(get_application)) -> dict:
-    print(f"{app=}")
-    res = await app.execute_async(GetAccountQuery(id=uuid.uuid4()))
-    print(f"{res=}")
-    # pprint(vars(app))
-    # pprint(dir(app))
+@router.get("/health")
+async def health() -> dict:
     return {"status": "ok"}

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Self
 from uuid import UUID
 
+from pydantic import BaseModel
+
 from seedwork.domain.events import DomainEvent
 from seedwork.domain.mixins import BusinessRuleValidationMixin
 
@@ -17,7 +19,11 @@ class Entity:
             self.awaitable_attrs = AwaitableAttrs(entity=self)
 
     @classmethod
-    def model_from(cls, data: dict) -> Self:
+    def model_from(cls, model: BaseModel) -> Self:
+        return dacite.from_dict(data_class=cls, data=model.model_dump())
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
         return dacite.from_dict(data_class=cls, data=data)
 
     def update(self, **kw) -> Any:
@@ -59,13 +65,13 @@ class AwaitableAttrs:
             "Only one of entity or awaitable_attrs can be provided"
         )
 
-        if awaitable_attrs is not None:
-            self._getter = lambda key: getattr(awaitable_attrs, key)
-        else:
-            async def entity_getter(key: str):
-                return getattr(entity, key)
+        def attrs_getter(key: str):
+            return getattr(awaitable_attrs, key)
 
-            self._getter = entity_getter
+        async def entity_getter(key: str):
+            return getattr(entity, key)
+
+        self._getter = attrs_getter if awaitable_attrs else entity_getter
 
     def __getattr__(self, key: str) -> Any:
         if key.startswith("_"):

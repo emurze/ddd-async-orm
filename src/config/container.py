@@ -10,12 +10,17 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
 )
-from lato import Application, TransactionContext
+from lato import TransactionContext
 
-from config.config import AppConfig
+from config.api_config import AppConfig
+from config.middlewares import (
+    event_collector_middleware,
+    error_handling_middleware,
+)
 from config.provider import ContainerProvider
-from modules.accounts.application import account_module
+from modules.accounts.application import accounts_module
 from modules.accounts.infra.repositories import AccountRepository
+from seedwork.application.application import Application
 
 
 def create_db_engine(config: AppConfig) -> AsyncEngine:
@@ -26,13 +31,14 @@ def create_db_engine(config: AppConfig) -> AsyncEngine:
 
 
 def create_application(config, db_engine) -> Application:
-    """Creates new instance of the application"""
+    """Creates new instance of the application."""
     application = Application(
         config.title,
         app_version=0.1,
         db_engine=db_engine,
     )
-    application.include_submodule(account_module)
+    application.include_submodule(accounts_module)
+    application.start_mappers()
 
     @application.on_create_transaction_context
     def on_create_transaction_context(**_) -> TransactionContext:
@@ -40,7 +46,7 @@ def create_application(config, db_engine) -> Application:
         session = AsyncSession(engine)
         correlation_id = uuid.uuid4()
 
-        # create IoC container for the transaction
+        # Create IoC container for the transaction
         dependency_provider = ContainerProvider(
             TransactionContainer(
                 db_session=session,
@@ -53,6 +59,9 @@ def create_application(config, db_engine) -> Application:
     def on_enter_transaction_context(ctx: TransactionContext) -> None:
         ctx.set_dependencies(publish=ctx.publish)
 
+    application.transaction_middleware(event_collector_middleware)
+    application.transaction_middleware(error_handling_middleware)
+
     @application.on_exit_transaction_context
     async def on_exit_transaction_context(
         ctx: TransactionContext,
@@ -64,22 +73,6 @@ def create_application(config, db_engine) -> Application:
         else:
             await session.commit()
         await session.close()
-
-    @application.transaction_middleware
-    async def event_collector_middleware(ctx: TransactionContext, call_next):
-        handler_kwargs = call_next.keywords
-
-        result = call_next()
-        domain_events = []
-        repositories = filter(
-            lambda x: hasattr(x, 'collect_events'), handler_kwargs.values()
-        )
-        for repo in repositories:
-            domain_events.extend(repo.collect_events())
-        for event in domain_events:
-            ctx.publish(event)
-
-        return result
 
     return application
 

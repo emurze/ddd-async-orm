@@ -1,5 +1,3 @@
-import os
-import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -7,11 +5,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from config.api_config import get_migrations_config
 from seedwork.infra.database import base_registry
 
-sys.path.append(os.path.join(sys.path[0], "src"))
-
-from api.main import config as app_config
+app_config = get_migrations_config()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -31,7 +28,6 @@ target_metadata = [base_registry.metadata]
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:

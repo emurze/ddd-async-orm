@@ -37,9 +37,7 @@ def resolve_provider_by_type(
 
 
 class ContainerProvider(DependencyProvider):
-    """
-    TODO: Write meaning
-    """
+    """Translates container dependencies for injection into services."""
 
     def __init__(self, container: Container):
         self.container = container

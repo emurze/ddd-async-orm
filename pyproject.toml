@@ -36,10 +36,6 @@ compose_up       = "docker compose -f docker-compose.dev.yml up --build"
 compose_clean    = "docker compose -f docker-compose.dev.yml down -v"
 start            = { shell = "cd src && uvicorn api.main:app --reload" }
 test             = "bash -c 'pytest -s -m unit && pytest -s -m integration && pytest -s -m e2e'"
-test_all         = "pytest -s tests"
-test_domain      = "pytest -s -k domain"
-test_infra       = "pytest -s -k infra"
-test_application = "pytest -s -k application"
 test_unit        = "pytest -s -m unit"
 test_integration = "pytest -s -m integration"
 test_e2e         = "pytest -s -m e2e"
@@ -74,7 +70,7 @@ markers = [
     "e2e: marks tests as e2e tests i.e. using a client api and a database (deselect with '-m \"not e2e\"')",
     "marked: just marked"
 ]
-pythonpath = [".", "src", ]
+pythonpath = [".", "src"]
 
 [tool.coverage.run]
 source = ["src"]

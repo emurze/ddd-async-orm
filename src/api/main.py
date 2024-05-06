@@ -8,8 +8,9 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
-from api.routers.health import health_router
-from config.config import AppConfig
+from api.routers.accounts import router as accounts_router
+from api.routers.health import router as health_router
+from config.api_config import AppConfig
 from config.container import ApplicationContainer
 
 config = AppConfig()
@@ -40,7 +41,7 @@ app = FastAPI(
     container=container,
 )
 app.include_router(health_router)
-
+app.include_router(accounts_router)
 app.add_middleware(
     CORSMiddleware,  # type: ignore
     allow_origins=config.allowed_origins,

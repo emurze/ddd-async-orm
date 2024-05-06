@@ -1,5 +1,7 @@
+from modules.accounts.domain.value_objects import AccountId
 from seedwork.domain.entities import AggregateRoot
 
 
 class Account(AggregateRoot):
-    pass
+    id: AccountId
+    name: str

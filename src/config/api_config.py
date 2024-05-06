@@ -1,7 +1,7 @@
 import logging
 
 from enum import StrEnum
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -75,7 +75,7 @@ class TestConfig(BaseSettings):
     test_cache_dsn: str
 
 
-def get_test_top_config() -> AppConfig:
+def get_test_config() -> AppConfig:
     test_config = TestConfig()
     return AppConfig(
         log_level=test_config.test_log_level,  # type: ignore
@@ -84,3 +84,12 @@ def get_test_top_config() -> AppConfig:
         db_echo=test_config.test_db_echo,
         cache_dsn=test_config.test_cache_dsn,
     )
+
+
+def get_migrations_config() -> AppConfig:
+    """Gets the app_config and populates the base registry with tables."""
+    from config.container import ApplicationContainer
+    config_cls: Any = type('MigrationsAppConfig', (AppConfig,), {})
+    config_cls.model_config["env_file"] = "env/.app.env"
+    ApplicationContainer(config=(app_config := config_cls()))
+    return app_config
