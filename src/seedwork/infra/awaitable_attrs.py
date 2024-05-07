@@ -37,10 +37,6 @@ class MemoryAwaitableAttrs(GenericAwaitableAttrs):
         self._loaded_objs.append(obj)
         return obj
 
-    def _delete_loading_markers(self):
-        for obj in self._loaded_objs:
-            delattr(obj, "_is_loaded")
-
     def __getattr__(self, name: str) -> Awaitable[Any]:
         async def wrapper():
             return self._set_marker(getattr(self._instance, f"__loading{name}"))

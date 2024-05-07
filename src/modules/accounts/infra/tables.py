@@ -7,7 +7,7 @@ account_table = Table(
     "account",
     base_registry.metadata,
     Column("id", UUID, primary_key=True),
-    Column("name", String),
+    Column("name", String, nullable=False),
 )
 
 

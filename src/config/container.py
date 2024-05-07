@@ -12,18 +12,18 @@ from sqlalchemy.ext.asyncio import (
 )
 from lato import TransactionContext
 
-from config.api_config import AppConfig
+from config.api_config import ApiConfig
 from config.middlewares import (
     event_collector_middleware,
     error_handling_middleware,
 )
 from config.provider import ContainerProvider
 from modules.accounts.application import accounts_module
-from modules.accounts.infra.repositories import AccountRepository
+from modules.accounts.infra.repositories import AccountSqlAlchemyRepository
 from seedwork.application.application import Application
 
 
-def create_db_engine(config: AppConfig) -> AsyncEngine:
+def create_db_engine(config: ApiConfig) -> AsyncEngine:
     from seedwork.infra.database import base_registry
     engine = create_async_engine(config.db_dsn, echo=config.db_echo)
     base_registry.metadata.bind = engine
@@ -78,7 +78,7 @@ def create_application(config, db_engine) -> Application:
 
 
 class ApplicationContainer(DeclarativeContainer):
-    config: Any = Singleton(AppConfig)
+    config: Any = Singleton(ApiConfig)
     db_engine = Singleton(create_db_engine, config)
     application = Singleton(create_application, config, db_engine)
 
@@ -86,4 +86,15 @@ class ApplicationContainer(DeclarativeContainer):
 class TransactionContainer(DeclarativeContainer):
     correlation_id = Dependency(instance_of=UUID)
     db_session = Dependency(instance_of=AsyncSession)
-    account_repository: Any = Singleton(AccountRepository, session=db_session)
+    account_repository: Any = Singleton(
+        AccountSqlAlchemyRepository, session=db_session
+    )
+
+
+def override_container(config, db_engine) -> ApplicationContainer:
+    app_container.config.override(Singleton(lambda: config))
+    app_container.db_engine.override(Singleton(lambda: db_engine))
+    return app_container
+
+
+app_container = ApplicationContainer()

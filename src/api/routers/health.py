@@ -5,4 +5,4 @@ router = APIRouter()
 
 @router.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return {"message": "I'm healthy!"}

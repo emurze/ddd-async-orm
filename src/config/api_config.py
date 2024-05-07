@@ -19,7 +19,7 @@ class LogLevel(StrEnum):
     debug = "DEBUG"
 
 
-class AppConfig(BaseSettings):
+class ApiConfig(BaseSettings):
     model_config = generic_config
     debug: bool = False
     docs_url: str = "/docs"
@@ -75,9 +75,9 @@ class TestConfig(BaseSettings):
     test_cache_dsn: str
 
 
-def get_test_config() -> AppConfig:
+def get_test_config() -> ApiConfig:
     test_config = TestConfig()
-    return AppConfig(
+    return ApiConfig(
         log_level=test_config.test_log_level,  # type: ignore
         title=test_config.test_title,
         db_dsn=test_config.test_db_dsn,
@@ -86,10 +86,10 @@ def get_test_config() -> AppConfig:
     )
 
 
-def get_migrations_config() -> AppConfig:
+def get_migrations_config() -> ApiConfig:
     """Gets the app_config and populates the base registry with tables."""
     from config.container import ApplicationContainer
-    config_cls: Any = type('MigrationsAppConfig', (AppConfig,), {})
+    config_cls: Any = type('MigrationsAppConfig', (ApiConfig,), {})
     config_cls.model_config["env_file"] = "env/.app.env"
     ApplicationContainer(config=(app_config := config_cls()))
     return app_config

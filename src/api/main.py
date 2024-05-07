@@ -10,11 +10,9 @@ from redis import asyncio as aioredis
 
 from api.routers.accounts import router as accounts_router
 from api.routers.health import router as health_router
-from config.api_config import AppConfig
-from config.container import ApplicationContainer
+from config.container import app_container
 
-config = AppConfig()
-container = ApplicationContainer(config=config)
+config = app_container.config()
 config.configure_logging()
 
 
@@ -38,7 +36,7 @@ app = FastAPI(
     secret_key=config.secret_key,
     config=config,
     lifespan=lifespan,
-    container=container,
+    container=app_container,
 )
 app.include_router(health_router)
 app.include_router(accounts_router)

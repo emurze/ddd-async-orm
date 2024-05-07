@@ -104,11 +104,14 @@ class InMemoryRepository(IGenericRepository[AggregateRoot]):
     """
     awaitable_class: type[MemoryAwaitableAttrs] = MemoryAwaitableAttrs
 
-    def __init__(self, entity_class: type[AggregateRoot]) -> None:
-        self.entity_class: type[AggregateRoot] = entity_class
+    def __init__(self) -> None:
+        self._old_entity_getter = None
+        self.entity_class: type[AggregateRoot] | None = None
         self.identity_map: dict[UUID, Any] = {}
 
     def add(self, entity: AggregateRoot) -> UUID:
+        if not self.entity_class:
+            self.entity_class = type(entity)
         self.identity_map[entity.id] = entity
         return entity.id
 
@@ -137,19 +140,16 @@ class InMemoryRepository(IGenericRepository[AggregateRoot]):
         """
         if entity := self.identity_map.get(entity_id):
             entity.awaitable_attrs = self.awaitable_class.wrap(entity)
+        if not self.entity_class:
+            self.entity_class = type(entity)
         return entity
 
     def __enter__(self) -> Self:
-        self._old_entity_getter = self.entity_class.__getattribute__
-        self.entity_class.__getattribute__ = self.awaitable_class.getattr
+        if self.entity_class:
+            self._old_entity_getter = self.entity_class.__getattribute__
+            self.entity_class.__getattribute__ = self.awaitable_class.getattr
         return self
 
-    def __exit__(self, *_):
-        self.entity_class.__getattribute__ = self._old_entity_getter
-        self._delete_loading_markers()
-
-    def _delete_loading_markers(self) -> None:
-        for item in self.identity_map.items():
-            getter = getattr(getattr(item, "awaitable_attrs"), "_getter")
-            if deleter := getattr(getter, "_delete_loading_markers", None):
-                deleter()
+    def __exit__(self, *_) -> None:
+        if self.entity_class:
+            self.entity_class.__getattribute__ = self._old_entity_getter
