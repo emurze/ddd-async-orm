@@ -40,6 +40,7 @@ class LocalEntity(Entity):
 @dataclass(kw_only=True)
 class AggregateRoot(BusinessRuleValidationMixin, Entity):
     """Consists of 1+ entities. Spans transaction boundaries."""
+
     def __post_init__(self) -> None:
         self.events: list[DomainEvent] = []
 
@@ -58,12 +59,12 @@ class AwaitableAttrs:
     def __init__(
         self, *, entity: Any = None, awaitable_attrs: Any = None
     ) -> None:
-        assert entity or awaitable_attrs, (
-            "Either entity or awaitable_attrs must be provided"
-        )
-        assert not (entity and awaitable_attrs), (
-            "Only one of entity or awaitable_attrs can be provided"
-        )
+        assert (
+            entity or awaitable_attrs
+        ), "Either entity or awaitable_attrs must be provided"
+        assert not (
+            entity and awaitable_attrs
+        ), "Only one of entity or awaitable_attrs can be provided"
 
         def attrs_getter(key: str):
             return getattr(awaitable_attrs, key)

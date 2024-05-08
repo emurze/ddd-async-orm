@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class BusinessRule(BaseModel):
     """This is a base class for implementing domain rules"""
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
     __message: str = "Business rule is broken"
 

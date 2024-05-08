@@ -39,7 +39,9 @@ class MemoryAwaitableAttrs(GenericAwaitableAttrs):
 
     def __getattr__(self, name: str) -> Awaitable[Any]:
         async def wrapper():
-            return self._set_marker(getattr(self._instance, f"__loading{name}"))
+            return self._set_loading_marker(
+                getattr(self._instance, f"__loading{name}")
+            )
 
         getter = object.__getattribute__
         return getter(self, name) if name.startswith("_") else wrapper()

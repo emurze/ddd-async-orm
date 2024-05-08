@@ -3,8 +3,12 @@ from typing import Optional
 
 from dependency_injector import providers
 from dependency_injector.containers import Container
-from dependency_injector.providers import Dependency, Factory, Provider, \
-    Singleton
+from dependency_injector.providers import (
+    Dependency,
+    Factory,
+    Provider,
+    Singleton,
+)
 from dependency_injector.wiring import Provide, inject  # noqa
 from lato import DependencyProvider
 import copy

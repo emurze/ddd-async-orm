@@ -39,9 +39,9 @@ test             = { shell = "cd src && pytest -s -m unit && pytest -s -m integr
 test_unit        = { shell = "cd src && pytest -s -m unit" }
 test_integration = { shell = "cd src && pytest -s -m integration" }
 test_e2e         = { shell = "cd src && pytest -s -m e2e" }
-test_marked      = { shell = "cd src && pytest -s -m marked tests" }
+test_marked      = { shell = "cd src && pytest -s -m marked" }
 test_coverage    = { shell = "cd src && pytest -s --cov=src --cov-report=html tests" }
-format           = "black . -l 79 tests src"
+format           = "black . -l 79"
 lint             = "flake8 --toml-config pyproject.toml src tests"
 check_types      = "mypy src tests"
 makemigrations   = "alembic revision --autogenerate"

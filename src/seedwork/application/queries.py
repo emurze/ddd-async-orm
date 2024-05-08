@@ -1,10 +1,18 @@
+from typing import Any, Optional
+
 from lato import Query as LatoQuery
-from pydantic import ConfigDict
+
+from seedwork.application.dtos import Result
+from seedwork.domain.errors import Error
+from seedwork.domain.events import generic_model_config
 
 
 class Query(LatoQuery):
-    model_config = ConfigDict(
-        frozen=True,
-        from_attributes=True,
-        arbitrary_types_allowed=True,
-    )
+    """Abstract base class for all queries"""
+
+    model_config = generic_model_config
+
+
+class QueryResult(Result):
+    payload: Any = None
+    error: Optional[Error] = None

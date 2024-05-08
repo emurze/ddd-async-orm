@@ -71,8 +71,10 @@ class TestConfig(BaseSettings):
     test_title: str = "Test"
     test_log_level: str = LogLevel.info
     test_db_echo: bool = False
-    test_db_dsn: str
-    test_cache_dsn: str
+    test_db_dsn: str = (
+        "postgresql+asyncpg://adm1:12345678@localhost:5432/learning"
+    )
+    test_cache_dsn: str = "redis://localhost:6379/1"
 
 
 def get_test_config() -> ApiConfig:
@@ -89,7 +91,8 @@ def get_test_config() -> ApiConfig:
 def get_migrations_config() -> ApiConfig:
     """Gets the app_config and populates the base registry with tables."""
     from config.container import ApplicationContainer
-    config_cls: Any = type('MigrationsAppConfig', (ApiConfig,), {})
+
+    config_cls: Any = type("MigrationsAppConfig", (ApiConfig,), {})
     config_cls.model_config["env_file"] = "env/.app.env"
     ApplicationContainer(config=(app_config := config_cls()))
     return app_config

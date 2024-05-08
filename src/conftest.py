@@ -7,13 +7,10 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
 )
-
-from collections.abc import AsyncIterator
-
 from sqlalchemy.orm import clear_mappers
-
+from collections.abc import AsyncIterator
 from config.api_config import get_test_config
-from config.container import create_application, override_container
+from config.container import create_application, app_container
 from seedwork.application.application import Application
 from seedwork.infra.database import suppress_echo, base_registry
 from seedwork.infra.repository import InMemoryRepository
@@ -23,18 +20,12 @@ engine = create_async_engine(
     config.db_dsn, echo=config.db_echo, poolclass=NullPool
 )
 session_factory = async_sessionmaker(engine, expire_on_commit=True)
-override_container(config, engine)
+app_container.config.override(config)
+app_container.db_engine.override(engine)
 
 
 @pytest.fixture(scope="function")
-def app() -> Application:
-    """Starts sqlalchemy mappers."""
-    yield create_application(config, engine)
-    clear_mappers()
-
-
-@pytest.fixture(scope="function")
-async def _restart_tables() -> None:
+async def _restart_engine() -> None:
     """Cleans tables before each test."""
     async with engine.begin() as conn:
         with suppress_echo(engine):
@@ -44,22 +35,29 @@ async def _restart_tables() -> None:
 
 
 @pytest.fixture(scope="function")
-def mem_repo() -> InMemoryRepository:
-    with InMemoryRepository() as repo:
-        yield repo
+def app(_restart_engine) -> Application:
+    """Restarts mappers."""
+    yield create_application(config, engine)
+    clear_mappers()
 
 
 @pytest.fixture(scope="function")
-async def db_session(app, _restart_tables) -> AsyncIterator[AsyncSession]:
+async def db_session(app) -> AsyncIterator[AsyncSession]:
     async with session_factory() as session:
         yield session
 
 
 @pytest.fixture(scope="function")
-async def ac(_restart_tables) -> AsyncIterator[AsyncClient]:
+async def ac(_restart_engine) -> AsyncIterator[AsyncClient]:
     """Provides a configured async test client for end-to-end tests."""
     from api.main import app as api_app
 
     async with LifespanManager(api_app):
         async with AsyncClient(app=api_app, base_url="http://test") as ac:
             yield ac
+
+
+@pytest.fixture(scope="function")
+def mem_repo() -> InMemoryRepository:
+    with InMemoryRepository() as repo:
+        yield repo

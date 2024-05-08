@@ -3,6 +3,7 @@ import pytest
 from modules.accounts.application.command import CreateAccountCommand
 from modules.accounts.application.command.create_account import create_account
 from modules.accounts.domain.repositories import IAccountRepository
+from seedwork.application.application import Application
 from seedwork.domain.services import next_id
 from seedwork.tests.application.utils import FakeEventPublisher
 
@@ -11,10 +12,7 @@ from seedwork.tests.application.utils import FakeEventPublisher
 async def test_create_account(mem_repo: IAccountRepository) -> None:
     # arrange
     account_id = next_id()
-    command = CreateAccountCommand(
-        id=account_id,
-        name="Vlados335"
-    )
+    command = CreateAccountCommand(id=account_id, name="Vlados335")
     publish = FakeEventPublisher()
 
     # act
@@ -24,3 +22,15 @@ async def test_create_account(mem_repo: IAccountRepository) -> None:
     account = await mem_repo.get_by_id(account_id)
     assert account.name == "Vlados335"
     assert publish.contains("AccountCreatedEvent")
+
+
+@pytest.mark.marked
+@pytest.mark.integration
+async def test_app_can_create_account(app: Application) -> None:
+    # arrange
+    account_id = next_id()
+    command = CreateAccountCommand(id=account_id, name="Vlados335")
+    result = await app.execute_async(command)
+    print(f"{result=}")
+
+    # test errors

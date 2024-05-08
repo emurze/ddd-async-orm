@@ -102,16 +102,16 @@ class InMemoryRepository(IGenericRepository[AggregateRoot]):
             # Access entities here
         ```
     """
+
     awaitable_class: type[MemoryAwaitableAttrs] = MemoryAwaitableAttrs
 
     def __init__(self) -> None:
         self._old_entity_getter = None
-        self.entity_class: type[AggregateRoot] | None = None
+        self.entity_class = None
         self.identity_map: dict[UUID, Any] = {}
 
     def add(self, entity: AggregateRoot) -> UUID:
-        if not self.entity_class:
-            self.entity_class = type(entity)
+        self.override_getattr(type(entity))
         self.identity_map[entity.id] = entity
         return entity.id
 
@@ -140,14 +140,16 @@ class InMemoryRepository(IGenericRepository[AggregateRoot]):
         """
         if entity := self.identity_map.get(entity_id):
             entity.awaitable_attrs = self.awaitable_class.wrap(entity)
-        if not self.entity_class:
-            self.entity_class = type(entity)
+        self.override_getattr(type(entity))
         return entity
 
+    def override_getattr(self, entity_class) -> None:
+        if not self._old_entity_getter:
+            self._old_entity_getter = entity_class.__getattribute__
+            entity_class.__getattribute__ = self.awaitable_class.getattr
+            self.entity_class = entity_class
+
     def __enter__(self) -> Self:
-        if self.entity_class:
-            self._old_entity_getter = self.entity_class.__getattribute__
-            self.entity_class.__getattribute__ = self.awaitable_class.getattr
         return self
 
     def __exit__(self, *_) -> None:

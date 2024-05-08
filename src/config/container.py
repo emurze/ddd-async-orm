@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, Any
+from typing import Any, Optional
 from uuid import UUID
 
 from dependency_injector.containers import DeclarativeContainer
@@ -25,6 +25,7 @@ from seedwork.application.application import Application
 
 def create_db_engine(config: ApiConfig) -> AsyncEngine:
     from seedwork.infra.database import base_registry
+
     engine = create_async_engine(config.db_dsn, echo=config.db_echo)
     base_registry.metadata.bind = engine
     return engine
@@ -57,7 +58,10 @@ def create_application(config, db_engine) -> Application:
 
     @application.on_enter_transaction_context
     def on_enter_transaction_context(ctx: TransactionContext) -> None:
-        ctx.set_dependencies(publish=ctx.publish)
+        ctx.set_dependencies(
+            publish=ctx.publish,
+            is_error=False,
+        )
 
     application.transaction_middleware(event_collector_middleware)
     application.transaction_middleware(error_handling_middleware)
@@ -66,9 +70,9 @@ def create_application(config, db_engine) -> Application:
     async def on_exit_transaction_context(
         ctx: TransactionContext,
         exception: Optional[Exception] = None,
-    ) -> None:
+    ):
         session = ctx["db_session"]
-        if exception:
+        if exception or ctx["is_error"]:
             await session.rollback()
         else:
             await session.commit()
@@ -89,12 +93,6 @@ class TransactionContainer(DeclarativeContainer):
     account_repository: Any = Singleton(
         AccountSqlAlchemyRepository, session=db_session
     )
-
-
-def override_container(config, db_engine) -> ApplicationContainer:
-    app_container.config.override(Singleton(lambda: config))
-    app_container.db_engine.override(Singleton(lambda: db_engine))
-    return app_container
 
 
 app_container = ApplicationContainer()

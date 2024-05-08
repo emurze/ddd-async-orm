@@ -22,7 +22,7 @@ async def get_account(
     app: Application = Depends(get_application),
 ):
     res = await app.execute_async(GetAccountQuery(id=account_id))
-    return res
+    return res.payload
 
 
 @router.post(
@@ -36,4 +36,6 @@ async def create_account(
 ):
     command = CreateAccountCommand.model_validate(request_body)
     await app.execute_async(command)
-    return await app.execute_async(GetAccountQuery(id=command.id))
+    res = await app.execute_async(GetAccountQuery(id=command.id))
+    print(f"{res=}")
+    return res.payload
