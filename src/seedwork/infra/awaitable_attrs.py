@@ -27,21 +27,11 @@ class SqlAlchemyAwaitableAttrs(GenericAwaitableAttrs):
 class MemoryAwaitableAttrs(GenericAwaitableAttrs):
     """Loads lazy memory attributes and relations asynchronously."""
 
-    def __init__(self, *args, **kw) -> None:
-        super().__init__(*args, **kw)
-        self._loaded_objs: list = []
-
-    def _set_loading_marker(self, obj: Any) -> Any:
-        """Marks obj as loaded and appends it to the list of loaded objects."""
-        obj._is_loaded = True
-        self._loaded_objs.append(obj)
-        return obj
-
     def __getattr__(self, name: str) -> Awaitable[Any]:
         async def wrapper():
-            return self._set_loading_marker(
-                getattr(self._instance, f"__loading{name}")
-            )
+            obj = getattr(self._instance, f"__loading{name}")
+            obj._is_loaded = True
+            return obj
 
         getter = object.__getattribute__
         return getter(self, name) if name.startswith("_") else wrapper()

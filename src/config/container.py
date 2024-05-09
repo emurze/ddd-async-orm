@@ -61,7 +61,7 @@ def create_application(config, db_engine) -> Application:
         ctx.set_dependencies(
             publish=ctx.publish,
             is_error=False,
-        )
+        )  # TODO: publish dependency and RabbitMQ integration
 
     application.transaction_middleware(event_collector_middleware)
     application.transaction_middleware(error_handling_middleware)

@@ -21,7 +21,8 @@ async def event_collector_middleware(ctx: TransactionContext, call_next):
     for repo in repositories:
         domain_events.extend(repo.collect_events())
     for event in domain_events:
-        ctx.publish(event)
+        # calls all handlers
+        await ctx.publish_async(event)
 
     return result
 

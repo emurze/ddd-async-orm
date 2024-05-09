@@ -140,7 +140,7 @@ class InMemoryRepository(IGenericRepository[AggregateRoot]):
         """
         if entity := self.identity_map.get(entity_id):
             entity.awaitable_attrs = self.awaitable_class.wrap(entity)
-        self.override_getattr(type(entity))
+            self.override_getattr(type(entity))
         return entity
 
     def override_getattr(self, entity_class) -> None:

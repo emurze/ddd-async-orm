@@ -34,7 +34,7 @@ pytest-cov = "^4.1.0"
 [tool.poe.tasks]
 compose_up       = "docker compose -f docker-compose.dev.yml up --build"
 compose_clean    = "docker compose -f docker-compose.dev.yml down -v"
-start            = { shell = "cd src && uvicorn api.main:app --reload" }
+start            = { shell = "cd src && uvicorn api.main:app --host 0.0.0.0 --port 8080 --reload" }
 test             = { shell = "cd src && pytest -s -m unit && pytest -s -m integration && pytest -s -m e2e" }
 test_unit        = { shell = "cd src && pytest -s -m unit" }
 test_integration = { shell = "cd src && pytest -s -m integration" }

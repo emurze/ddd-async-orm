@@ -29,8 +29,6 @@ class ApiConfig(BaseSettings):
     secret_key: SecretStr
     title: str = "Online shop"
     version: str = "0.0.0"
-    host: str
-    port: int
     encoding: str = "utf8"
     allowed_origins: list[str] = ["http://frontend:3000"]
     pool_size: int = 10

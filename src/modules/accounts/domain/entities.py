@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from modules.accounts.domain.value_objects import AccountId
+from modules.accounts.domain.value_objects import AccountId, Address
 from seedwork.domain.entities import AggregateRoot
 
 
@@ -8,3 +8,4 @@ from seedwork.domain.entities import AggregateRoot
 class Account(AggregateRoot):
     id: AccountId = field(hash=True)
     name: str
+    address: Address | None

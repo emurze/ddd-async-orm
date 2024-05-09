@@ -1,1 +1,1 @@
-from .create_account import CreateAccountCommand
+from .create_account import CreateAccountCommand, AddressDTO
