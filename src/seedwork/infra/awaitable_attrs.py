@@ -30,7 +30,7 @@ class MemoryAwaitableAttrs(GenericAwaitableAttrs):
     def __getattr__(self, name: str) -> Awaitable[Any]:
         async def wrapper():
             obj = getattr(self._instance, f"__loading{name}")
-            obj._is_loaded = True
+            obj.__is_loaded = True
             return obj
 
         getter = object.__getattribute__
@@ -43,7 +43,7 @@ class MemoryAwaitableAttrs(GenericAwaitableAttrs):
             return object.__getattribute__(self, name.replace("__loading", ""))
 
         obj = object.__getattribute__(self, name)
-        if hasattr(obj, "_sa_adapter") and not getattr(obj, "_is_loaded", ""):
+        if hasattr(obj, "_sa_adapter") and not getattr(obj, "__is_loaded", ""):
             raise MissingGreenlet()
         else:
             return obj

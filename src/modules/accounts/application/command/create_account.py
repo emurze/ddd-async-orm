@@ -4,8 +4,8 @@ from uuid import UUID
 from pydantic import Field
 
 from modules.accounts.application import accounts_module
+from modules.accounts.application.event import AccountCreatedEvent
 from modules.accounts.domain.entities import Account
-from modules.accounts.domain.events import AccountCreatedEvent
 from modules.accounts.domain.repositories import IAccountRepository
 from seedwork.application.commands import Command
 from seedwork.application.dtos import DTO
@@ -35,6 +35,5 @@ async def create_account(
     https://medium.com/design-microservices-architecture-with-patterns/outbox-pattern-for-microservices-architectures-1b8648dfaa27
     todo: pragmatic error handling
     """
-    print(f"{command=}")
     account_repository.add(Account.from_dict(command.model_dump()))
-    publish(AccountCreatedEvent(id=command.id))
+    await publish(AccountCreatedEvent(id=command.id))

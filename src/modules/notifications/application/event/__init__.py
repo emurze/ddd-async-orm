@@ -1,0 +1,1 @@
+from .print_hello_when_account_created import print_hello

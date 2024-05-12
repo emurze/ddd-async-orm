@@ -20,7 +20,10 @@ from config.middlewares import (
 from config.provider import ContainerProvider
 from modules.accounts.application import accounts_module
 from modules.accounts.infra.repositories import AccountSqlAlchemyRepository
+from modules.notifications.application import notifications_module
 from seedwork.application.application import Application
+from seedwork.infra.inbox_outbox import start_outbox_mappers, \
+    SqlAlchemyMessageOutbox
 
 
 def create_db_engine(config: ApiConfig) -> AsyncEngine:
@@ -37,8 +40,10 @@ def create_application(config, db_engine) -> Application:
         config.title,
         app_version=0.1,
         db_engine=db_engine,
+        mappers=[start_outbox_mappers],
     )
     application.include_submodule(accounts_module)
+    application.include_submodule(notifications_module)
     application.start_mappers()
 
     @application.on_create_transaction_context
@@ -58,10 +63,11 @@ def create_application(config, db_engine) -> Application:
 
     @application.on_enter_transaction_context
     def on_enter_transaction_context(ctx: TransactionContext) -> None:
+        message_outbox = SqlAlchemyMessageOutbox(ctx["db_session"])
         ctx.set_dependencies(
-            publish=ctx.publish,
+            publish=message_outbox.publish,
             is_error=False,
-        )  # TODO: publish dependency and RabbitMQ integration
+        )
 
     application.transaction_middleware(event_collector_middleware)
     application.transaction_middleware(error_handling_middleware)

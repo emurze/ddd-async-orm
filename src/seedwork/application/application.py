@@ -9,6 +9,8 @@ from lato import (
 
 class Application(LatoApplication):
     def start_mappers(self) -> None:
+        for mapper in self.get_dependency("mappers"):
+            mapper()
         for submodule in self._submodules:
             if mapper := getattr(submodule, "_mapper", None):
                 mapper()
