@@ -26,6 +26,7 @@ asgi-lifespan = "^2.1.0"
 dependency-injector = "^4.41.0"
 dacite = "^1.8.1"
 lato = "^0.11.0"
+result = "^0.16.1"
 
 [tool.poetry.dev-dependencies]
 poethepoet = "^0.25.0"
@@ -34,13 +35,13 @@ pytest-cov = "^4.1.0"
 [tool.poe.tasks]
 compose_up       = "docker compose -f docker-compose.dev.yml up --build"
 compose_clean    = "docker compose -f docker-compose.dev.yml down -v"
-start            = { shell = "cd src && uvicorn api.main:app --host 0.0.0.0 --port 8080 --reload" }
-test             = { shell = "cd src && pytest -s -m unit && pytest -s -m integration && pytest -s -m e2e" }
-test_unit        = { shell = "cd src && pytest -s -m unit" }
-test_integration = { shell = "cd src && pytest -s -m integration" }
-test_e2e         = { shell = "cd src && pytest -s -m e2e" }
-test_marked      = { shell = "cd src && pytest -s -m marked" }
-test_coverage    = { shell = "cd src && pytest -s --cov=src --cov-report=html tests" }
+start            = { shell = "cd src && uvicorn main:app --host 0.0.0.0 --port 8080 --reload" }
+test             = { shell = "cd tests && pytest -s -m unit && pytest -s -m integration && pytest -s -m e2e" }
+test_unit        = { shell = "cd tests && pytest -s -m unit" }
+test_integration = { shell = "cd tests && pytest -s -m integration" }
+test_e2e         = { shell = "cd tests && pytest -s -m e2e" }
+test_marked      = { shell = "cd tests && pytest -s -m marked" }
+test_coverage    = { shell = "cd tests && pytest -s --cov=src --cov-report=html tests" }
 format           = "black . -l 79"
 lint             = "flake8 --toml-config pyproject.toml src tests"
 check_types      = "mypy src tests"

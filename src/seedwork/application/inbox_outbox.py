@@ -29,13 +29,18 @@ class IMessageOutput(Protocol):
         ...
 
 
+class IMessenger:
+    pass
+
+
 class EventWorker:
     def __init__(
         self,
         app: Application,
         message_output: type[IMessageOutput],
+        messenger: IMessenger,
     ) -> None:
-        self._message_input = cast(Any, message_output)
+        self._message_output = cast(Any, message_output)
         self._app = app
 
     @staticmethod
@@ -48,10 +53,10 @@ class EventWorker:
 
     async def process_outbox_message(self) -> None:
         async with self._app.transaction_context() as ctx:
-            message_input = self._message_input(ctx["db_session"])
-            messages = await message_input.get_unpublished()  # at least one
+            message_output = self._message_output(ctx["db_session"])
+            messages = await message_output.get_unpublished()  # at least one
             for message in messages:
                 event_cls = self._get_cls_for(message.type)
                 event = event_cls(**json.loads(message.data))
                 await ctx.publish_async(event)  # TODO: my own publish_async
-                await message_input.mark_as_published(message)
+                await message_output.mark_as_published(message)
