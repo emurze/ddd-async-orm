@@ -64,7 +64,7 @@ filterwarnings = [
 ]
 addopts = ["-rsxX", "-l", "--tb=short", "--strict-markers"]
 xfail_strict = true
-cache_dir = ".cache/pytest"
+cache_dir = ".venv/cache/pytest"
 asyncio_mode = "auto"
 markers = [
     "unit: marks test as unit test i.e. not using any external services (deselect with '-m \"not unit\"')",
@@ -77,13 +77,13 @@ pythonpath = [".", "src"]
 [tool.coverage.run]
 source = ["src"]
 omit = ["__init__.py", "*/migrations/*"]
-data_file = ".cache/coverage/.coverage"
+data_file = ".venv/cache/coverage/.coverage"
 
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
 warn_no_return = false
-cache_dir = ".cache/mypy"
+cache_dir = ".venv/cache/mypy"
 plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
 exclude = ["migrations"]
 

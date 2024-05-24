@@ -2,11 +2,10 @@ import importlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Any as Json, cast, Any, Protocol
+from typing import Optional, Any as Json, Any
 from uuid import UUID
 
 from seedwork.application.application import Application
-from seedwork.application.events import IntegrationEvent
 
 
 @dataclass(kw_only=True)
@@ -18,30 +17,10 @@ class OutboxMessage:
     processed_on: Optional[datetime] = None
 
 
-class IMessageOutput(Protocol):
-    async def publish(self, event: IntegrationEvent) -> None:
-        ...
-
-    async def get_unpublished(self) -> list[OutboxMessage]:
-        ...
-
-    async def mark_as_published(self, message: OutboxMessage) -> None:
-        ...
-
-
-class IMessenger:
-    pass
-
-
-class EventWorker:
-    def __init__(
-        self,
-        app: Application,
-        message_output: type[IMessageOutput],
-        messenger: IMessenger,
-    ) -> None:
-        self._message_output = cast(Any, message_output)
-        self._app = app
+@dataclass(frozen=True, slots=True)
+class EventProducer:
+    message_output: Any
+    app: Application
 
     @staticmethod
     def _get_cls_for(message_type: str) -> type:
@@ -52,11 +31,13 @@ class EventWorker:
         return getattr(module, class_name)  # type: ignore
 
     async def process_outbox_message(self) -> None:
-        async with self._app.transaction_context() as ctx:
-            message_output = self._message_output(ctx["db_session"])
+        async with self.app.transaction_context() as ctx:
+            message_output = self.message_output(ctx["db_session"])
             messages = await message_output.get_unpublished()  # at least one
             for message in messages:
                 event_cls = self._get_cls_for(message.type)
                 event = event_cls(**json.loads(message.data))
-                await ctx.publish_async(event)  # TODO: my own publish_async
+
+                # publish_to_rabbitmq()
+
                 await message_output.mark_as_published(message)

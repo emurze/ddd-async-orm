@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   db:
-    build: config/db_postgres
+    build: config/db
     image: emurze/postgres:16
     container_name: db
     networks:
@@ -9,7 +9,7 @@ services:
     ports:
       - '5432:5432'
     env_file:
-      - env/.infra.env
+      - config/.infra.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -22,7 +22,7 @@ services:
     ports:
       - '8888:80'
     env_file:
-      - env/.infra.env
+      - config/.infra.env
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
@@ -46,7 +46,7 @@ services:
     container_name: rabbitmq
     image: rabbitmq:3.13.1-management-alpine
     env_file:
-      - env/.infra.env
+      - config/.infra.env
     ports:
       - "5672:5672"
       - "15672:15672"

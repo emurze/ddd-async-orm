@@ -6,7 +6,7 @@ from typing import Optional, Any
 from pydantic import SecretStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-generic_config = SettingsConfigDict(env_file="../env/.app.env", extra="allow")
+generic_config = SettingsConfigDict(env_file="../config/.app.env", extra="allow")
 LOG_FORMAT_DEBUG = (
     "%(levelname)s:     %(message)s  %(pathname)s:%(funcName)s:%(lineno)d"
 )

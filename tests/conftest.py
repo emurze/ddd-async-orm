@@ -1,3 +1,5 @@
+from typing import Coroutine
+
 import pytest
 from asgi_lifespan import LifespanManager
 from httpx import AsyncClient
@@ -12,6 +14,7 @@ from collections.abc import AsyncIterator
 
 from container import app_container, create_application
 from seedwork.application.application import Application
+from seedwork.domain.events import DomainEvent
 from seedwork.infra.database import suppress_echo, base_registry
 from seedwork.infra.repository import InMemoryRepository
 from tests.config import get_test_config
@@ -62,3 +65,25 @@ async def ac(_restart_engine) -> AsyncIterator[AsyncClient]:
 def mem_repo() -> InMemoryRepository:
     with InMemoryRepository() as repo:
         yield repo
+
+
+class FakeEventPublisher:
+    def __init__(self) -> None:
+        self.events: list[DomainEvent] = []
+
+    def __call__(self, event: DomainEvent) -> Coroutine:
+        self.events.append(event)
+
+        async def get_coroutine():
+            return
+
+        return get_coroutine()
+
+    def contains(self, event: str | type[DomainEvent]) -> bool:
+        return any(
+            [
+                type(ev).__name__ == event
+                or isinstance(ev, event)  # type: ignore
+                for ev in self.events
+            ]
+        )
